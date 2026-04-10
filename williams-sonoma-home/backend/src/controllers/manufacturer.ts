@@ -1,0 +1,174 @@
+import { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
+import pool from '../config/database';
+
+// Load AI insights
+const loadInsights = () => {
+  const projectRoot = process.cwd();
+  const priorityPath = path.join(projectRoot, 'models', 'server', 'results', 'priority_actions.json');
+  const summariesPath = path.join(projectRoot, 'models', 'client', 'results', 'sku_summaries.json');
+
+  let priorityActions: any = {};
+  let skuSummaries: any = {};
+
+  try {
+    if (fs.existsSync(priorityPath)) {
+      const data = JSON.parse(fs.readFileSync(priorityPath, 'utf-8'));
+      data.forEach((item: any) => {
+        priorityActions[item.sku_id] = item;
+      });
+    }
+  } catch (e) {}
+
+  try {
+    if (fs.existsSync(summariesPath)) {
+      const data = JSON.parse(fs.readFileSync(summariesPath, 'utf-8'));
+      data.forEach((item: any) => {
+        skuSummaries[item.sku_id] = item;
+      });
+    }
+  } catch (e) {}
+
+  return { priorityActions, skuSummaries };
+};
+
+const insights = loadInsights();
+
+export const manufacturerController = {
+  async getDashboard(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const priorityActionsArray = Object.values(insights.priorityActions)
+        .sort((a: any, b: any) => b.urgency_score - a.urgency_score)
+        .slice(0, 10);
+
+      const riskLevels = priorityActionsArray.map((action: any) => ({
+        level: action.urgency_score > 700000 ? 'critical' : action.urgency_score > 400000 ? 'high' : 'medium',
+        productName: action.product_name,
+        issue: action.action,
+        revenueAtRisk: `$${action.revenue_at_risk.toFixed(2)}`,
+        urgencyScore: action.urgency_score,
+      }));
+
+      // Mock return rate trend data
+      const returnRateTrend = [
+        { week: 'Week 1', rate: 12.5 },
+        { week: 'Week 2', rate: 13.2 },
+        { week: 'Week 3', rate: 11.8 },
+        { week: 'Week 4', rate: 14.1 },
+        { week: 'Week 5', rate: 12.9 },
+      ];
+
+      // Mock top return reasons
+      const topReturnReasons = [
+        { reason: 'Color mismatch', percentage: 28 },
+        { reason: 'Damaged in shipping', percentage: 22 },
+        { reason: 'Size inaccuracy', percentage: 18 },
+        { reason: 'Quality issues', percentage: 16 },
+        { reason: 'Changed mind', percentage: 16 },
+      ];
+
+      res.json({
+        priorityActions: riskLevels,
+        metrics: {
+          totalProducts: Object.keys(insights.priorityActions).length,
+          criticalAlerts: riskLevels.filter((r: any) => r.level === 'critical').length,
+          averageReturnRate: 13.1,
+        },
+        returnRateTrend,
+        topReturnReasons,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to fetch dashboard' });
+    }
+  },
+
+  async getProducts(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const result = await pool.query(
+        'SELECT sku_id, product_name, category, price FROM products LIMIT 50'
+      );
+
+      const products = result.rows.map((p: any) => {
+        const priority = insights.priorityActions[p.sku_id];
+        return {
+          skuId: p.sku_id,
+          name: p.product_name,
+          category: p.category,
+          price: p.price,
+          returnRate: priority ? (priority.velocity / 100) * 100 : 0,
+          riskLevel: priority
+            ? priority.urgency_score > 700000
+              ? 'critical'
+              : priority.urgency_score > 400000
+              ? 'high'
+              : 'medium'
+            : 'low',
+        };
+      });
+
+      res.json({ products });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch products' });
+    }
+  },
+
+  async getProductDetail(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const { skuId } = req.params;
+      const priority = insights.priorityActions[skuId];
+
+      if (!priority) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      res.json({
+        skuId: priority.sku_id,
+        productName: priority.product_name,
+        gapScore: Math.floor(Math.random() * 40) + 40, // Mock: 40-80%
+        originalDescription: priority.original_description,
+        suggestedRewrite: priority.suggested_rewrite,
+        missingAttributes: ['Weight', 'Care instructions'],
+        painPoints: priority.pain_points,
+        urgencyScore: priority.urgency_score,
+        revenueAtRisk: priority.revenue_at_risk,
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch product detail' });
+    }
+  },
+
+  async updateDescription(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const { skuId } = req.params;
+      const { description } = req.body;
+
+      // Update database
+      await pool.query(
+        'UPDATE products SET description_text = $1 WHERE sku_id = $2',
+        [description, skuId]
+      );
+
+      res.json({ success: true, message: 'Description updated' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update description' });
+    }
+  },
+};

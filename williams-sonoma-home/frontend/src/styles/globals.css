@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+:root {
+  --primary: #1A1A1A;
+  --secondary: #8B7355;
+  --accent: #C4A882;
+  --background: #FAF9F6;
+  --surface: #FFFFFF;
+  --critical: #C62828;
+  --high: #F57C00;
+  --medium: #FBC02D;
+}
+
+.btn {
+  @apply px-6 py-3 bg-primary text-white uppercase tracking-wider transition-all;
+  letter-spacing: 1px;
+}
+
+.btn:hover {
+  @apply shadow-md;
+}
+
+.btn-secondary {
+  @apply bg-secondary;
+}
+
+.btn-accent {
+  @apply bg-accent text-primary;
+}
+
+.product-card {
+  @apply bg-white border border-[#E8E4D9] p-4 transition-shadow;
+}
+
+.product-card:hover {
+  @apply shadow-lg;
+}
+
+.insight-card {
+  @apply bg-[#FAF9F6] p-6 rounded-none;
+}
+
+.tag {
+  @apply bg-[#F5F0EB] text-secondary px-3 py-1 uppercase text-xs;
+  letter-spacing: 0.5px;
+}
+
+.buyer-avatar {
+  @apply w-14 h-14 rounded-full bg-secondary text-white flex items-center justify-center font-semibold;
+}
+
+.alert-card {
+  @apply border-l-4 p-4 mb-4;
+}
+
+.alert-critical {
+  @apply border-l-[#C62828] bg-red-50;
+}
+
+.alert-high {
+  @apply border-l-[#F57C00] bg-orange-50;
+}
+
+.alert-medium {
+  @apply border-l-[#FBC02D] bg-yellow-50;
+}
+
+body {
+  background-color: #FAF9F6;
+  color: #1A1A1A;
+}
