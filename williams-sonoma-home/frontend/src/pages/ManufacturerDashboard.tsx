@@ -11,6 +11,7 @@ interface DashboardData {
   metrics: any;
   returnRateTrend: any[];
   topReturnReasons: any[];
+  returnsByCategory: any[];
 }
 
 export const ManufacturerDashboard: React.FC = () => {
@@ -120,12 +121,26 @@ export const ManufacturerDashboard: React.FC = () => {
           <div className="bg-white border border-gray-300 p-6">
             <h3 className="font-serif text-lg uppercase mb-6">TOP RETURN REASONS</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dashboard.topReturnReasons}>
+              <BarChart data={dashboard.topReturnReasons} margin={{ bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E8E4D9" />
-                <XAxis dataKey="reason" angle={-45} textAnchor="end" height={100} stroke="#8B7355" />
+                <XAxis dataKey="reason" angle={-35} textAnchor="end" height={80} stroke="#8B7355" tick={{ fontSize: 11 }} />
+                <YAxis stroke="#8B7355" label={{ value: 'Returns', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: 11 } }} />
+                <Tooltip formatter={(value: any) => [`${value} returns`, 'Count']} />
+                <Bar dataKey="count" fill="#8B7355" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* New: Returns by Category */}
+          <div className="bg-white border border-gray-300 p-6">
+            <h3 className="font-serif text-lg uppercase mb-6">RETURNS BY CATEGORY</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dashboard.returnsByCategory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E8E4D9" />
+                <XAxis dataKey="category" stroke="#8B7355" />
                 <YAxis stroke="#8B7355" />
                 <Tooltip />
-                <Bar dataKey="percentage" fill="#8B7355" />
+                <Bar dataKey="returns" fill="#C62828" />
               </BarChart>
             </ResponsiveContainer>
           </div>

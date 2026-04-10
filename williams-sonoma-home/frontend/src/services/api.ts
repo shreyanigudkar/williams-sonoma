@@ -100,7 +100,7 @@ class ApiService {
   }
 
   getSimilarReviews(skuId: string) {
-    return this.client.get(`/customer/product/${skuId}/similar-reviews`);
+    return this.client.get(`/catalog/product/${skuId}/similar-reviews`);
   }
 
   // Manufacturer

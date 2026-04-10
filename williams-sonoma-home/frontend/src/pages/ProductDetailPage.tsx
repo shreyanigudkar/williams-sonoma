@@ -476,26 +476,14 @@ export const ProductDetailPage: React.FC = () => {
                       <h4 style={{ fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: '#9a9086', marginBottom: '24px', margin: 0 }}>Review Highlights</h4>
                       
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        {insights.highlights?.pros && insights.highlights.pros.map((pro, i) => (
-                          <div key={i} style={{ display: 'flex', gap: '8px', padding: '12px 0', borderBottom: '1px solid #f5f2ed' }}>
-                            <span style={{ color: '#2d6a4f', fontSize: '14px', flexShrink: 0 }}>✓</span>
-                            <span style={{ fontSize: '14px', color: '#2d6a4f' }}>{pro.charAt(0).toUpperCase() + pro.slice(1)}</span>
+                        {insights.highlights?.aiSummaryPara ? (
+                          <div style={{ fontSize: '15px', color: '#4a4640', lineHeight: 1.8, fontStyle: 'italic', position: 'relative', paddingLeft: '24px' }}>
+                            <span style={{ position: 'absolute', left: 0, top: 0, fontSize: '24px', color: '#e8e4de', fontFamily: 'serif', lineHeight: 1 }}>"</span>
+                            {insights.highlights.aiSummaryPara}
                           </div>
-                        ))}
-                        
-                        {insights.highlights?.cons && insights.highlights.cons.map((con, i) => (
-                          <div key={i} style={{ display: 'flex', gap: '8px', padding: '12px 0', borderBottom: '1px solid #f5f2ed' }}>
-                            <span style={{ color: '#d32f2f', fontSize: '14px', flexShrink: 0 }}>X</span>
-                            <span style={{ fontSize: '14px', color: '#d32f2f' }}>{con.charAt(0).toUpperCase() + con.slice(1)}</span>
-                          </div>
-                        ))}
-
-                        {insights.highlights?.aiSummary && insights.highlights.aiSummary.slice(0, 1).map((neu, i) => (
-                          <div key={i} style={{ display: 'flex', gap: '8px', padding: '12px 0' }}>
-                            <span style={{ color: '#d97706', fontSize: '14px', flexShrink: 0 }}>~</span>
-                            <span style={{ fontSize: '14px', color: '#d97706' }}>{neu}</span>
-                          </div>
-                        ))}
+                        ) : (
+                          <div style={{ fontSize: '14px', color: '#9a9086' }}>Synthesizing review highlights...</div>
+                        )}
                       </div>
                     </div>
                   </div>

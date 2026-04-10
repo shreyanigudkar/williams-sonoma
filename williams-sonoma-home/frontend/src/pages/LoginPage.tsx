@@ -35,7 +35,7 @@ export const LoginPage: React.FC = () => {
       if (user.role === 'customer') {
         navigate('/catalog');
       } else if (user.role === 'manufacturer') {
-        navigate('/manufacturer');
+        navigate('/manufacturer/dashboard');
       } else if (user.role === 'admin') {
         navigate('/admin');
       }

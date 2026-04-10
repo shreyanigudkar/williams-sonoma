@@ -18,13 +18,13 @@ router.get('/auth/preference-options', authController.getPreferenceOptions);
 router.get('/catalog/products', optionalAuthMiddleware, catalogController.getProducts);
 router.get('/catalog/product/:skuId', optionalAuthMiddleware, catalogController.getProduct);
 router.get('/catalog/product/:skuId/insights', optionalAuthMiddleware, catalogController.getProductInsights);
+router.get('/catalog/product/:skuId/similar-reviews', optionalAuthMiddleware, customerController.getSimilarReviews);
 router.get('/catalog/categories', catalogController.getCategories);
 
 // Customer routes
 router.get('/customer/orders', authMiddleware, roleMiddleware(['customer']), customerController.getOrders);
 router.post('/customer/orders', authMiddleware, roleMiddleware(['customer']), customerController.createOrder);
 router.post('/customer/returns', authMiddleware, roleMiddleware(['customer']), customerController.createReturn);
-router.get('/customer/product/:skuId/similar-reviews', authMiddleware, roleMiddleware(['customer']), customerController.getSimilarReviews);
 
 // Manufacturer routes
 router.get('/manufacturer/dashboard', authMiddleware, roleMiddleware(['manufacturer']), manufacturerController.getDashboard);

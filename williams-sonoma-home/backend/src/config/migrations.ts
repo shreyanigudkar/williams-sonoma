@@ -7,6 +7,7 @@ const migrations = [
       await pool.query(`
         CREATE TABLE IF NOT EXISTS customers (
           customer_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          external_id VARCHAR(50) UNIQUE,
           email VARCHAR(255) UNIQUE NOT NULL,
           full_name VARCHAR(255) NOT NULL,
           password_hash VARCHAR(255) NOT NULL,
@@ -142,6 +143,50 @@ const migrations = [
       await pool.query('CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id)');
       await pool.query('CREATE INDEX IF NOT EXISTS idx_reviews_sku ON reviews(sku_id)');
       await pool.query('CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)');
+    },
+  },
+  {
+    name: '009-robust-schema-fix',
+    up: async () => {
+      // Ensure customers has all required columns for ML matching
+      await pool.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS external_id VARCHAR(50) UNIQUE');
+      await pool.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS lighting_condition VARCHAR(100)');
+      await pool.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS preferred_styles TEXT');
+      await pool.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS preferred_colors TEXT');
+      await pool.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS age_group VARCHAR(50)');
+      
+      // Ensure reviews has review_date with a default
+      await pool.query('ALTER TABLE reviews ADD COLUMN IF NOT EXISTS review_date TIMESTAMP DEFAULT NOW()');
+      await pool.query('ALTER TABLE reviews ALTER COLUMN review_date SET NOT NULL');
+      await pool.query('ALTER TABLE reviews ALTER COLUMN review_date SET DEFAULT NOW()');
+    },
+  },
+  {
+    name: '010-create-manufacturers',
+    up: async () => {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS manufacturers (
+          manufacturer_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          email VARCHAR(255) UNIQUE NOT NULL,
+          full_name VARCHAR(255) NOT NULL,
+          password_hash VARCHAR(255) NOT NULL,
+          role VARCHAR(50) NOT NULL DEFAULT 'manufacturer',
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+    },
+  },
+  {
+    name: '011-link-products-manufacturers',
+    up: async () => {
+      // Add manufacturer_id (the external business ID) to manufacturers
+      await pool.query('ALTER TABLE manufacturers ADD COLUMN IF NOT EXISTS external_manufacturer_id VARCHAR(100) UNIQUE');
+      
+      // Add manufacturer_id to products to map them
+      await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS manufacturer_id VARCHAR(100)');
+      
+      // Default existing products to 'MFR-SONOMA' for demo purposes
+      await pool.query("UPDATE products SET manufacturer_id = 'MFR-SONOMA' WHERE manufacturer_id IS NULL");
     },
   },
 ];

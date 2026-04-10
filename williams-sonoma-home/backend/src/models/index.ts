@@ -3,8 +3,16 @@ import pool from '../config/database';
 export const customerModel = {
   async findById(customerId: string) {
     const result = await pool.query(
-      'SELECT customer_id, email, full_name, role, age_group, lifestyle_tags, preferred_styles, preferred_colors, lighting_condition, avg_spend, return_rate FROM customers WHERE customer_id = $1',
+      'SELECT customer_id, external_id, email, full_name, role, age_group, lifestyle_tags, preferred_styles, preferred_colors, lighting_condition, avg_spend, return_rate FROM customers WHERE customer_id = $1',
       [customerId]
+    );
+    return result.rows[0];
+  },
+
+  async findByExternalId(externalId: string) {
+    const result = await pool.query(
+      'SELECT customer_id, external_id, full_name, role, age_group, lifestyle_tags, preferred_styles, preferred_colors, lighting_condition FROM customers WHERE external_id = $1',
+      [externalId]
     );
     return result.rows[0];
   },
@@ -32,6 +40,52 @@ export const customerModel = {
     const result = await pool.query(
       'SELECT embedding_vector FROM user_embeddings WHERE customer_id = $1',
       [customerId]
+    );
+    return result.rows[0];
+  },
+
+  async update(customerId: string, data: any) {
+    const { full_name, age_group, lifestyle_tags, preferred_styles, preferred_colors, lighting_condition } = data;
+    const result = await pool.query(
+      `UPDATE customers 
+       SET full_name = COALESCE($1, full_name),
+           age_group = COALESCE($2, age_group),
+           lifestyle_tags = COALESCE($3, lifestyle_tags),
+           preferred_styles = COALESCE($4, preferred_styles),
+           preferred_colors = COALESCE($5, preferred_colors),
+           lighting_condition = COALESCE($6, lighting_condition)
+       WHERE customer_id = $7
+       RETURNING *`,
+      [full_name, age_group, lifestyle_tags, preferred_styles, preferred_colors, lighting_condition, customerId]
+    );
+    return result.rows[0];
+  },
+};
+
+export const manufacturerModel = {
+  async findById(id: string) {
+    const result = await pool.query(
+      'SELECT manufacturer_id, external_manufacturer_id, email, full_name, role FROM manufacturers WHERE manufacturer_id = $1',
+      [id]
+    );
+    return result.rows[0];
+  },
+
+  async findByEmail(email: string) {
+    const result = await pool.query(
+      'SELECT * FROM manufacturers WHERE email = $1',
+      [email]
+    );
+    return result.rows[0];
+  },
+
+  async create(data: any) {
+    const { email, full_name, password_hash, manufacturerId } = data;
+    const result = await pool.query(
+      `INSERT INTO manufacturers (email, full_name, password_hash, external_manufacturer_id)
+       VALUES ($1, $2, $3, $4)
+       RETURNING manufacturer_id, external_manufacturer_id, email, full_name, role`,
+      [email, full_name, password_hash, manufacturerId]
     );
     return result.rows[0];
   },
